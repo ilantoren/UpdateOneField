@@ -8,13 +8,12 @@ This code has a simple plan:
 - Read the list and submit updates to the database in batches
 
 
-**Use-case:**  In [The case of mongod and the data analyst](https://mongo-loves-data.medium.com/the-case-of-mongo-and-the-data-analyst-f3ca2f52537d)  I showed how _Spark_ and the <br/>
-Mongodb Spark-Connector can be used to populate a database.  The connection from MongoDB to other data tools <br/>
-programming environments makes it a very useful.  Is MongoDB better than a RDBMS?  I'll give that a qualified *Yes* <br/>
-because of Compass and the Aggregation framework.  Having good tools for developing data queries is one of the things <br/>
-that sets MongoDB apart. _And how does that relate to partitioning your data?_  When I had finished uploading all of my <br/>
-GDELT files to MongoDB I had a collection with 4M records.  Not _BigData_, but certainly lots of data.  Too much for <br/>
-running an analysis with R or Excel, but more importantly using a more manageable slice of data is faster and the initial <br/>
+**Use-case:**  In [The case of mongod and the data analyst](https://mongo-loves-data.medium.com/the-case-of-mongo-and-the-data-analyst-f3ca2f52537d)  I showed how _Spark_ and the Mongodb Spark-Connector can be used to populate a database.  The connection from MongoDB to other data tools
+programming environments makes it a very useful.  Is MongoDB better than a RDBMS?  I'll give that a qualified *Yes*
+because of Compass and the Aggregation framework.  Having good tools for developing data queries is one of the things
+that sets MongoDB apart. _And how does that relate to partitioning your data?_  When I had finished uploading all of my
+GDELT files to MongoDB I had a collection with 4M records.  Not _BigData_, but certainly lots of data.  Too much for
+running an analysis with R or Excel, but more importantly using a more manageable slice of data is faster and the initial
 questions about the data are not harmed by having a smaller dataset.  
 
 
