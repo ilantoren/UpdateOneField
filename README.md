@@ -103,3 +103,81 @@ p + facet_grid(vars(key)) + labs( title="Distribution of GoldsteinScale across p
 
 ```
 ![GoldsteingScale over 4 partitions](./images/by_partition.jpeg "GoldsteinScale by Partition")
+
+## What about the distribution of countries in different partitions?
+
+```R
+#Examining distribution of CountryCodes in data by partition
+library( mongolite)
+library(dplyr)
+library(arrow)
+library(ggplot2)
+library( tidyr)
+
+
+aggregation = '
+[
+  {
+    "$match": {
+      "GoldsteinScale": {
+        "$ne": null
+      }, 
+      "AvgTone": {
+        "$ne": null
+      }, 
+      "Actor1CountryCode": {
+        "$ne": null
+      }, 
+      "key": {
+        "$in": [
+          5, 9, 15, 19
+        ]
+      }
+    }
+  }, {
+    "$project": {
+      "Actor1CountryCode": 1, 
+      "Actor2CountryCode": 1, 
+      "Actor1Code": 1, 
+      "GoldsteinScale": 1, 
+      "AvgTone": 1, 
+      "key": 1
+    }
+  }, {
+    "$setWindowFields": {
+      "partitionBy": "$Actor1CountryCode", 
+      "output": {
+        "count": {
+          "$sum": 1
+        }, 
+        "tone_avg": {
+          "$avg": "$AvgTone"
+        }, 
+        "scale_avg": {
+          "$avg": "$GoldsteinScale"
+        }, 
+        "tone_std": {
+          "$stdDevSamp": "$AvgTone"
+        }
+      }
+    }
+  }, {
+    "$match": {
+      "count": {
+        "$gt": 1000
+      }
+    }
+  }
+]
+'
+
+client = mongo( collection="data", db="gdelt", url="mongodb://localhost")
+country_data <- client$aggregate(aggregation)
+
+country_data %>% ggplot( aes( x=Actor1CountryCode, fill=Actor1CountryCode)) +
+     geom_bar(position = "identity") + ylim( 0, 5000) + facet_grid( vars(key)) +
+     labs( title="Count of mentions of Actor1CountryCode by partition", caption="USA has been removed as count > 1000") + theme_bw()
+
+```
+
+![GoldsteingScale over 4 partitions](./images/by_partition.jpeg "GoldsteinScale by Partition")
