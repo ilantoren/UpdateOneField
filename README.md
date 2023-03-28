@@ -8,13 +8,12 @@ This code has a simple plan:
 - Read the list and submit updates to the database in batches
 
 
-**Use-case:**  In [The case of mongod and the data analyst](https://mongo-loves-data.medium.com/the-case-of-mongo-and-the-data-analyst-f3ca2f52537d)  I showed how _Spark_ and the <br/>
-Mongodb Spark-Connector can be used to populate a database.  The connection from MongoDB to other data tools <br/>
-programming environments makes it a very useful.  Is MongoDB better than a RDBMS?  I'll give that a qualified *Yes* <br/>
-because of Compass and the Aggregation framework.  Having good tools for developing data queries is one of the things <br/>
-that sets MongoDB apart. _And how does that relate to partitioning your data?_  When I had finished uploading all of my <br/>
-GDELT files to MongoDB I had a collection with 4M records.  Not _BigData_, but certainly lots of data.  Too much for <br/>
-running an analysis with R or Excel, but more importantly using a more manageable slice of data is faster and the initial <br/>
+**Use-case:**  In [The case of mongod and the data analyst](https://mongo-loves-data.medium.com/the-case-of-mongo-and-the-data-analyst-f3ca2f52537d)  I showed how _Spark_ and the Mongodb Spark-Connector can be used to populate a database.  The connection from MongoDB to other data tools
+programming environments makes it a very useful.  Is MongoDB better than a RDBMS?  I'll give that a qualified *Yes*
+because of Compass and the Aggregation framework.  Having good tools for developing data queries is one of the things
+that sets MongoDB apart. _And how does that relate to partitioning your data?_  When I had finished uploading all of my
+GDELT files to MongoDB I had a collection with 4M records.  Not _BigData_, but certainly lots of data.  Too much for
+running an analysis with R or Excel, but more importantly using a more manageable slice of data is faster and the initial
 questions about the data are not harmed by having a smaller dataset.  
 
 
@@ -104,81 +103,3 @@ p + facet_grid(vars(key)) + labs( title="Distribution of GoldsteinScale across p
 
 ```
 ![GoldsteingScale over 4 partitions](./images/by_partition.jpeg "GoldsteinScale by Partition")
-
-## What about the distribution of countries in different partitions?
-
-```R
-#Examining distribution of CountryCodes in data by partition
-library( mongolite)
-library(dplyr)
-library(arrow)
-library(ggplot2)
-library( tidyr)
-
-
-aggregation = '
-[
-  {
-    "$match": {
-      "GoldsteinScale": {
-        "$ne": null
-      }, 
-      "AvgTone": {
-        "$ne": null
-      }, 
-      "Actor1CountryCode": {
-        "$ne": null
-      }, 
-      "key": {
-        "$in": [
-          5, 9, 15, 19
-        ]
-      }
-    }
-  }, {
-    "$project": {
-      "Actor1CountryCode": 1, 
-      "Actor2CountryCode": 1, 
-      "Actor1Code": 1, 
-      "GoldsteinScale": 1, 
-      "AvgTone": 1, 
-      "key": 1
-    }
-  }, {
-    "$setWindowFields": {
-      "partitionBy": "$Actor1CountryCode", 
-      "output": {
-        "count": {
-          "$sum": 1
-        }, 
-        "tone_avg": {
-          "$avg": "$AvgTone"
-        }, 
-        "scale_avg": {
-          "$avg": "$GoldsteinScale"
-        }, 
-        "tone_std": {
-          "$stdDevSamp": "$AvgTone"
-        }
-      }
-    }
-  }, {
-    "$match": {
-      "count": {
-        "$gt": 1000
-      }
-    }
-  }
-]
-'
-
-client = mongo( collection="data", db="gdelt", url="mongodb://localhost")
-country_data <- client$aggregate(aggregation)
-
-country_data %>% ggplot( aes( x=Actor1CountryCode, fill=Actor1CountryCode)) +
-     geom_bar(position = "identity") + ylim( 0, 5000) + facet_grid( vars(key)) +
-     labs( title="Count of mentions of Actor1CountryCode by partition", caption="USA has been removed as count > 1000") + theme_bw()
-
-```
-
-![Country count over 4 partitions](./images/countries%20by%20partition.jpeg "Country events by Partition")
